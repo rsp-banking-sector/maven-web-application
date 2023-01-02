@@ -1,0 +1,30 @@
+{
+
+def mavenHome = tool name: "maven3.8.5"
+
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
+
+stage  ('check out') {
+git credentialsId: 'ca07b5e4-1edf-4cdb-b679-313faaa79542', url: 'https://github.com/rsp-banking-sector/maven-web-application.git'
+}
+
+stage ('build'){
+sh "${mavenHome}/bin/mvn clean package"
+}
+
+stage ('sonar report'){
+    sh "${mavenHome}/bin/mvn sonar:sonar"
+}
+
+stage ('store data in nexus'){
+    sh "${mavenHome}/bin/mvn deploy"
+}
+
+stage ('deploy app into the tomcat'){
+ sshagent(['702b7b2e-337d-4714-839c-d95c32b127ef']) {
+ sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.7.103:/opt/apache-tomcat-9.0.68/webapps/"
+}
+}
+
+
+}
