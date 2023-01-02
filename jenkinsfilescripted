@@ -15,7 +15,7 @@ sh "${mavenHome}/bin/mvn clean package"
 stage ('sonar report'){
     sh "${mavenHome}/bin/mvn sonar:sonar"
 }
-
+/*
 stage ('store data in nexus'){
     sh "${mavenHome}/bin/mvn deploy"
 }
@@ -25,6 +25,6 @@ stage ('deploy app into the tomcat'){
  sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.7.103:/opt/apache-tomcat-9.0.68/webapps/"
 }
 }
-
+*/
 
 }
