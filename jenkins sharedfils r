@@ -1,0 +1,36 @@
+ @Library ('sharedlibrary') _
+
+//groovy script
+pipeline {
+    
+    agent any
+    
+    tools {
+        maven "maven3.8.5"
+    }
+    stages{
+    //get code from git hub
+    stage ('get code from the git'){
+        steps {git credentialsId: 'ca07b5e4-1edf-4cdb-b679-313faaa79542', url: 'https://github.com/rsp-banking-sector/maven-web-application.git'}
+    }
+    
+    // build packages
+    stage('build packges'){
+        steps{sh "mvn clean package"}
+    }
+}// stages closing
+
+post{
+      aborted {
+    sendSlackNotifications(currentBuild.result)
+  }
+  success {
+   sendSlackNotifications(currentBuild.result)
+  }
+  failure {
+sendSlackNotifications(currentBuild.result)
+  }
+    
+}//post closing
+
+}// pipeline closing
