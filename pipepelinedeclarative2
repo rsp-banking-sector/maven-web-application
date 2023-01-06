@@ -1,0 +1,40 @@
+//Declarative Pipeline
+pipeline{
+    
+    agent any
+    tools {
+  maven 'maven3.8.5'
+}
+
+    parameters {
+  choice choices: ['development', 'master', 'uat', 'stage'], description: 'branchnames', name: 'branchname'
+  string defaultValue: 'Rajesh Reddy', description: 'personname', name: 'personname'
+   }
+
+    //get the code from git-hub
+stages{
+    
+	
+    stage('Git-Clone'){
+	steps{
+       git branch: "${params.branchname}", credentialsId: 'ca07b5e4-1edf-4cdb-b679-313faaa79542', url: 'https://github.com/rsp-banking-sector/maven-web-application.git'
+         }
+       }
+    
+    //build the code by Maven-3.806
+   stage('build'){
+       steps{
+              sh "mvn clean package"
+             sh "echo ${personname}"
+    }
+   }//build closing
+    //sonar report
+    stage('sonar report'){
+        steps{
+            sh "mvn sonar:sonar"
+            sh "echo ${personname}"
+         }
+   }
+   
+   }//stages closing
+}//pipe line closing
