@@ -1,0 +1,30 @@
+pipeline {
+
+agent {
+    label 'slaves'
+}
+  tools {
+ maven "maven3.8.5"
+   }
+   stages{   
+   //get code from github
+   stage('code checkout'){
+   steps{
+     git branch: 'development', credentialsId: 'ca07b5e4-1edf-4cdb-b679-313faaa79542', url: 'https://github.com/rsp-banking-sector/maven-web-application.git'
+      }
+	  }		  
+stage('RunTestsandBuilds'){
+steps{
+parallel(
+Runtests:{
+sh "mvn clean test"
+},
+Build:{
+sh "mvn clean package"
+}
+)
+}//steps closing
+
+}//stage closing
+}//stages closing
+}//pipeline closing	  
