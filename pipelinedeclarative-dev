@@ -1,0 +1,83 @@
+   pipeline {
+   
+   agent any
+   
+   tools  {
+   maven "maven3.8.5"
+   }
+   
+   //here options we can add extra functions
+   options {
+  buildDiscarder logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')
+   }
+   /* triggers {
+  cron '* * * * *'
+}
+*/
+   
+   stages{
+   
+   //getting code from the git
+   stage('get checkout'){
+     steps {
+          sendslacknotification("STARTED")
+         git credentialsId: 'ca07b5e4-1edf-4cdb-b679-313faaa79542', url: 'https://github.com/rsp-banking-sector/maven-web-application.git'
+  }   
+   }
+   
+   // build package from maven
+   stage('build')   {
+     steps {sh "mvn clean package"}}
+
+      //upload artifact to the artifact
+	  stage('upload artifact to the nexus'){
+    	  steps{sh "mvn sonar:sonar"}}
+	  
+	  //deploy app into the tomcat
+	  stage('deploy app into the tomcat'){
+  	    steps {sh "mvn deploy"} }
+   
+   
+   }//stages closing
+   
+      post {
+  aborted {
+     sendslacknotification(currentBuild.result)
+  }
+  success {
+      sendslacknotification(currentBuild.result)
+  }
+  failure {
+   sendslacknotification(currentBuild.result)
+  }
+}//post is  closing
+
+   
+   }//pipeline closing
+   
+    //Build slack notification
+   def sendslacknotification(String buildStatus = 'STARTED') {
+  // build status of null means successful
+  buildStatus =  buildStatus ?: 'SUCCESSFUL'
+
+  // Default values
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+  def summary = "${subject} (${env.BUILD_URL})"
+
+  // Override default values based on build status
+  if (buildStatus == 'STARTED') {
+    color = 'YELLOW'
+    colorCode = '#FFFF00'
+  } else if (buildStatus == 'SUCCESS') {
+    color = 'GREEN'
+    colorCode = '#00FF00'
+  } else {
+    color = 'RED'
+    colorCode = '#FF0000'
+  }
+
+  // Send notifications
+  slackSend (color: colorCode, message: summary,)
+}
